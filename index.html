@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title> Zoom </title>
+		<style type="text/css">
+
+			body{
+				font-family: "Arial", sans-serif;
+			}
+
+			/** To take **/
+			
+			body{
+				overflow-y: scroll;
+				margin: 0;
+				padding: 0;
+			}
+			
+			#container_zoom{
+				display: block;
+				margin: 10px auto;
+			}
+		
+			#container_zoom figure{
+				position: relative;
+				width: 100%;
+				margin: 0 0 25px 0;
+			}
+			
+			#container_zoom figure img{
+				width: 100%;
+				display: block;
+				box-sizing: border-box;
+				-webkit-box-sizing: border-box;
+				-moz-box-sizing: border-box;
+			}
+			
+			#numericIndecator{
+				width: 50px; 
+				height: 50px;
+				position: absolute;
+				background: rgba(0,0,0,.75);
+				border-radius: 50px;
+				color: #fff;
+				line-height: 50px;
+				font-size: 1.2em;
+				top: -25px;
+				right: -25px;
+				text-align: center;
+			}
+			
+			#lens{
+				opacity: 0;
+				margin: 0;
+				padding: 0;
+				background: rgba(255,255,255,.7);
+				position: absolute;
+			}
+			
+			#clone-container{
+				overflow: hidden;
+				left: 0;
+				position: absolute;	
+				opacity: 0;
+				border: 2px solid #c8c8c8;
+			}
+			
+			#clone-container img{
+				position: absolute;
+				z-index: 0;
+				margin: 0;
+			}
+			
+			#zoomIndexBar{
+				position: absolute;
+				border: 1px solid #c8c8c8;
+				height: 40px;
+				margin: 0;
+				padding: 0;
+				opacity: 0;
+				left: 0;
+			}
+			
+			#cursor{
+				background: #1E90FF;
+				height: 35px;
+				width: 6.66666667%;
+				position: absolute;
+				top: 2.5px;
+				left: 0;
+				margin: 0;
+				padding: 0;
+			}
+			
+			/***** End To take *****/
+
+			p{
+				border: 1px solid #c8c8c8;
+				padding: 5px;
+				text-align: justify;
+				text-indent: 10px;
+			}
+			
+			#message{
+				width: 100%;
+				background: black;
+				color: #fff;
+				height: 50px;
+				line-height: 50px;
+				text-align: center;
+				font-family: "arial", sans-serif;
+				-webkit-transition: 2000ms opacity;
+				-moz-transition: 2000ms opacity;
+				-o-transition: 2000ms opacity;
+				transition: 2000ms opacity;
+				margin: 0;
+			}
+
+			#blockOfLinks{
+				display: flex;
+				display: -webkit-flex;
+				justify-content: space-around;
+				-webkit-justify-content: space-around;
+				padding: 10px;
+				background: #333;
+				margin: 0;
+			}
+
+			#blockOfLinks a{
+				color: #fff;
+				text-decoration: none;
+			}
+
+			#blockOfLinks a:hover{
+				color: orange;
+			}
+
+		</style>
+		<meta charset="UTF-8"/>
+	</head>
+</html>
+<body>
+	
+	<p id="message"> Wait until load is complete. Images in high Definition </p>
+	<p id="blockOfLinks">
+		<a href="http://github.cote-desserts.fr/zoom.html">HTML File</a>
+		<a href="http://github.cote-desserts.fr/zoom.html">CSS File</a>
+		<a href="http://github.cote-desserts.fr/zoom.html">JS File</a>
+	</p>
+
+	
+	<div id="container_zoom" data-width="40">
+		<figure>
+			<img src="https://images2.alphacoders.com/560/560491.jpg" alt="hamburger"/>
+		</figure>
+		<p>
+			"But I must explain to you how all this mistaken idea of denouncing pleasure and praising pain was born and I will give 	you a complete account of the system, and expound the actual teachings of the great explorer of the truth, the master-builder of human happiness.
+		</p>
+		<p>
+			"Pleasure and praising pain was born and I will give you a complete account of the system, and expound the actual teachings of the great explorer of the truth, the master-builder of human happiness.
+		</p>
+		<p>
+			"Born and I will give 	you a complete account of the system, and expound the actual teachings of the great explorer of the truth, the master-builder of human happiness.
+		</p>
+		<figure>
+			<img src="http://wallsdesk.com/wp-content/uploads/2016/03/New-York-hd-background.jpg" alt="new-york-city"/>
+		</figure>
+		<p>
+			Some other text
+		</p>
+		<figure>
+			<img src="http://www.photodenature.fr/wp-content/uploads/2014/12/photo-photo-paysage-hd-9.jpg" alt="paysage"/>
+		</figure>
+	</div>
+	
+</body>
+<script type="text/javascript">
+	
+	/*
+
+	Florenta
+	
+	||  ||  ||||||  || 		||		|||||||		
+	||  ||  ||		||		||		||	 ||		
+	||||||  |||||	||		||		||	 ||		
+	||  ||  ||		||		||		||	 ||		
+	||  ||  ||||||	||||||	||||||	|||||||		
+	
+	*/
+	
+	/* Selectors */
+	
+	/* 
+		numericIncatorElt => figure in the original Image when hovered 
+		originalImgElt => original Image (that will be zoomed)
+		blockToMove => white transparent block around the cursor when hovering over the original image
+		clonedImageElt => image node that is a duplication of the image that is being hovered 
+		zoomLevel => current zoom level (by default: 2);
+		zl2 => zoomLevel multiplied by 2
+		figureElt => container of the original image (that will be zoomed)
+		wheelsign => direction when using the mouse wheel (- or +)
+		cursorEltCurrentX => left position of the cursor below the clonedImage
+		positionX && positionY => positionX && Y of the mouse cursor when hovering over the original image 
+			(X between 0 && image width / Y between 0 and image height)
+		oiW => original image width
+		oiH => origin image height
+		cursorElt = light blue block moving in the rectangle below the cloned image when zooming in the original image
+		slideX = number of pixel that the cursorElt (below the clonedImage) must slide (ont the left) in the rectangle if zoom in or zoom out
+		containerElt = container of the figures
+		zoomIndexBarElt = rectangle below the clonedImage, which contains the cursorElt
+		
+		clonedImageElt, zoomIndexBarElt, cursorElt, numericIncatorElt, blockToMove elements are created when the mouse is over a picture
+	
+	*/
+	
+	(function(){
+	    if(window.innerWidth > 1024) {
+            window.addEventListener("load", function () {
+                var numericIndecatorElt, originalImgElt, blockToMove, clonedImgElt, zoomLevel, figureElt,
+                    wheelSign, cursorEltCurrentX, positionX, positionY, oiW, oiH, cursorElt, slideX, zl2,
+                    containerElt, zoomIndexBarElt;
+
+                var bodyElt = document.getElementsByTagName("body")[0];
+                var figureElts = document.querySelectorAll("figure");
+                var figureOffsetTop, figureOffsetLeft;
+                var containerZoomElt = document.getElementById("container_zoom");
+                var containerZoomEltWidth = containerZoomElt.getAttribute("data-width");
+                var messageElt = document.getElementById("message");
+                containerZoomElt.style.width = containerZoomEltWidth + "%";
+
+                var deltaWidthDividedBy2 = (100 - containerZoomEltWidth) / 2;
+
+                var W = 1 / (deltaWidthDividedBy2 / containerZoomEltWidth); // to define width of cloned image container
+
+                /* Function executed when hovering around the normal-size picture */
+
+                function getCursorPosition(e) {
+
+
+                    /* if X mouse coord < 'X'% of normal-size picture width and greater than 'Y'% of normal-size picture width */
+
+                    /* (1/W) -> to manage the difference in size between container of cloned picture and normal-size picture (can be smaller, equal,
+					or bigger); 
+				*/
+
+                    function move() {
+
+                        /* Realtime (X,Y) mouse coords  */
+
+                        positionX = e.clientX - figureOffsetLeft;
+                        positionY = e.clientY - figureOffsetTop;
+
+                        if (positionX > (1 / zl2) * oiW && positionX < ((zl2 - 1) / zl2) * oiW) {
+
+                            /* We move the block over the normal-size picture and move the big picture as well */
+
+                            blockToMove.style.left = "" + (positionX - (oiW / zl2)) + "px";
+                            clonedImgElt.style.left = ((-positionX * zoomLevel * (1 / W)) + (1 / zl2) * clonedImgElt.width) + "px";
+                        }
+
+                        /* We fix the block and clonedImg to the left border */
+
+                        else if (positionX <= (1 / zl2) * oiW) {
+                            blockToMove.style.left = "0";
+                            clonedImgElt.style.left = "0";
+                        }
+                        else {
+
+                            /* We fix the block to the right border */
+
+                            blockToMove.style.right = "0";
+                            clonedImgElt.style.left = "-100%";
+                        }
+
+                        /* Idem above but with height */
+
+                        if (positionY > (1 / zl2) * oiH && positionY < ((zl2 - 1) / zl2) * oiH) {
+                            blockToMove.style.top = "" + (positionY - (oiH / zl2)) + "px";
+                            clonedImgElt.style.top = ((-positionY * zoomLevel * (1 / W)) + (1 / zl2) * clonedImgElt.height) + "px";
+                        }
+                        else if (positionY <= (1 / zl2) * oiH) {
+                            blockToMove.style.top = "0";
+                            clonedImgElt.style.top = "0";
+                        }
+                        else {
+                            blockToMove.style.bottom = "0";
+                            clonedImgElt.style.bottom = "0";
+                        }
+                    }
+
+                    move();
+                }
+
+                /* If leaving the picture, let's hide the moving block and big-size picture container */
+                function resetAll() {
+                    var i = 0;
+                    while (i < 2) {
+                        this.removeChild(this.lastElementChild);
+                        ++i;
+                    }
+                    blockToMove.style.opacity = "0";
+                    zoomLevel = 2;
+
+                    /* Once the user has finished to zoom in the picture,
+				   let's remove all the elements created and appended
+				   to the body when they entered the figure
+				 */
+                    bodyElt.removeChild(containerElt);
+                    bodyElt.removeChild(zoomIndexBarElt);
+                }
+
+                /* Let's get the direction if mousewheel event : zoom in or zoom out ? */
+                function zoomMore(e) {
+
+                    e.preventDefault();
+
+                    e.deltaY > 0 ? wheelSign = '-' : wheelSign = '+';
+
+                    /* Cursor below the clonedImage */
+
+                    cursorEltCurrentX = cursorElt.offsetLeft;
+
+                    if (wheelSign === '+') {
+                        if (zoomLevel < 15) {
+                            zoomLevel++;
+                            cursorElt.style.left = cursorEltCurrentX + slideX + "px";
+                        }
+                    }
+                    else {
+                        if (zoomLevel > 2) {
+                            zoomLevel--;
+                            cursorElt.style.left = cursorEltCurrentX - slideX + "px";
+                        }
+                    }
+
+                    zl2 = zoomLevel * 2;
+                    numericIndecatorElt.textContent = "x " + zoomLevel;
+
+                    defineDimensions();
+                    moveBlockAndClonedImage();
+
+                }
+
+                /* Resetting the position of the moving block on the picture + size of the big-picture */
+
+                /* (1/W) -> to manage the difference in size between container of cloned picture and normal-size picture (can be smaller, equal, or bigger); */
+                function moveBlockAndClonedImage() {
+
+                    blockToMove.style.left = "" + (positionX - (oiW / zl2)) + "px";
+                    blockToMove.style.top = "" + (positionY - (oiH / zl2)) + "px";
+                    clonedImgElt.style.left = (-positionX * zoomLevel * (1 / W) + (1 / zl2) * clonedImgElt.width) + "px";
+                    clonedImgElt.style.top = (-positionY * zoomLevel * (1 / W) + (1 / zl2) * clonedImgElt.height) + "px";
+
+                    /* To place the clonedImage at the right place if cursor out of the moving zone (1/n, n-1/n) "when" zooming */
+                    /* Place the block to move elt at the border of out of the moving when zooming */
+                    /* Otherwise, the moving block can spread out of the figure */
+                    if (positionX <= (1 / zl2) * oiW) {
+                        if (parseFloat(getComputedStyle(clonedImgElt).left) > 0) {
+                            clonedImgElt.style.left = "0";
+                            blockToMove.style.left = "0";
+                        }
+                    }
+                    if (positionX >= ((zl2 - 1) / zl2) * oiW) {
+                        if (parseFloat(getComputedStyle(clonedImgElt).right) > 0) {
+                            blockToMove.style.left = 100 - (blockToMove.clientWidth / oiW) * 100 + "%"; // Ex 100 - 33 = 77%
+                            clonedImgElt.style.left = -(zoomLevel - 1) * 100 + "%";
+                        }
+                    }
+
+                    if (positionY <= (1 / zl2) * oiH) {
+                        if (parseFloat(getComputedStyle(clonedImgElt).top) > 0) {
+                            clonedImgElt.style.top = "0";
+                            blockToMove.style.top = "0";
+                        }
+                    }
+
+                    if (positionY >= ((zl2 - 1) / zl2) * oiH) {
+                        blockToMove.style.top = 100 - (blockToMove.clientHeight / oiH) * 100 + "%";
+                        clonedImgElt.style.top = -(zoomLevel - 1) * 100 + "%";
+                    }
+                }
+
+                /* Dimensions of the elements */
+
+                /* W -> if container (width) of cloned image must be half the normal-size picture width, then 1/W should be
+			   1/2), if 33.333% (1/3)...
+			*/
+                function defineDimensions() {
+                    clonedImgElt.style.width = zoomLevel * oiW * (1 / W) + "px";
+                    containerElt.style.height = oiH * (1 / W) + "px";
+                    containerElt.style.width = oiW * (1 / W) + "px";
+                    containerElt.style.top = figureElt.offsetTop + "px";
+                    zoomIndexBarElt.style.top = figureElt.offsetTop + oiH * (1 / W) + 5 + "px";
+                    zoomIndexBarElt.style.width = oiW * (1 / W) + "px";
+                    blockToMove.style.height = oiH / zoomLevel + "px";
+                    blockToMove.style.width = oiW / zoomLevel + "px";
+                }
+
+                function defineElementHovered(e) {
+
+                    figureElt = this;
+                    figureOffsetLeft = figureElt.getBoundingClientRect().left;
+                    figureOffsetTop = figureElt.getBoundingClientRect().top;
+
+                    originalImgElt = figureElt.querySelector('img');
+                    oiW = originalImgElt.width;
+                    oiH = originalImgElt.height;
+
+                    containerElt = document.createElement("div");
+                    containerElt.setAttribute("id", "clone-container");
+
+                    zoomIndexBarElt = document.createElement("div");
+                    zoomIndexBarElt.setAttribute("id", "zoomIndexBar");
+
+                    cursorElt = document.createElement("div");
+                    cursorElt.setAttribute("id", "cursor");
+
+                    blockToMove = document.createElement('div');
+                    blockToMove.setAttribute('id', 'lens');
+
+                    numericIndecatorElt = document.createElement('div');
+                    numericIndecatorElt.setAttribute('id', 'numericIndecator');
+
+                    figureElt.appendChild(blockToMove);
+                    figureElt.appendChild(numericIndecatorElt);
+
+                    bodyElt.appendChild(containerElt);
+                    zoomIndexBarElt.appendChild(cursorElt);
+                    bodyElt.appendChild(zoomIndexBarElt);
+
+                    numericIndecatorElt = figureElt.lastElementChild;
+
+                    slideX = oiW * (1 / W) / 14;
+                    zoomLevel = 2;
+                    zl2 = zoomLevel * 2;
+                    clonedImgElt = originalImgElt.cloneNode(true);
+                    numericIndecatorElt.textContent = "x " + zoomLevel;
+
+                    /* Let's append the clone of the image that is being hovered */
+                    containerElt.appendChild(clonedImgElt);
+
+                    blockToMove.style.opacity = "1";
+                    containerElt.style.opacity = "1";
+                    zoomIndexBarElt.style.opacity = "1";
+                    defineDimensions();
+
+                    /* Event listeners */
+                    this.addEventListener("mousemove", getCursorPosition);
+                    this.addEventListener("mouseleave", resetAll);
+                    this.addEventListener("wheel", zoomMore);
+                }
+
+                for (var i = 0, c = figureElts.length; i < c; ++i) {
+                    figureElts[i].addEventListener("mouseenter", defineElementHovered);
+                }
+
+                setTimeout(function () {
+                    messageElt.style.display = "none";
+                }, 2000);
+
+                messageElt.style.opacity = "0";
+            });
+        }
+	})();	
+	
+</script>
